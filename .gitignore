@@ -1,0 +1,9 @@
+# SQLite 데이터베이스 파일 (스크립트로 언제든 재생성)
+library.db
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
