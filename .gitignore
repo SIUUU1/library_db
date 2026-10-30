@@ -7,3 +7,6 @@ library.db
 # Python
 __pycache__/
 *.pyc
+
+# 스크린샷 생성 중 만들어지는 임시 DB
+shots.db
