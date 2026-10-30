@@ -16,8 +16,10 @@ SQLite로 만든 **도서 대여 서비스** 데이터베이스입니다. 백엔
 | `03_queries.sql` | 핵심 쿼리 19개 (조회·조인·집계·서브쿼리·수정/삭제·인덱스) |
 | `04_bonus.sql` | 보너스 과제 3개 (JOIN vs 서브쿼리, FK 에러 재현, 미니 리포트) |
 | `results/` | 쿼리별 실행 결과 텍스트 (`Q01_*.txt` ~ `Q19_*.txt`, 전체 모음 `ALL_RESULTS.txt`) |
+| `results/screenshots/` | **쿼리별 실행 결과 스크린샷** (`Q01.png` ~ `Q19.png`, 보너스 `B1-1.png` ~ `B3-3.png`, 총 28장) |
 | `erd.png` | ERD 다이어그램 (원본 `erd.dot`, Graphviz) |
-| `run_all.py` | 01→04를 순서대로 실행해 `results/`를 다시 만드는 보조 스크립트 |
+| `run_all.py` | 01→04를 순서대로 실행해 결과 텍스트를 다시 만드는 보조 스크립트 |
+| `make_screenshots.py` | 쿼리를 다시 실행해 결과 화면을 캡처(PNG)하는 보조 스크립트 |
 
 ## 실행 방법
 
@@ -30,6 +32,9 @@ sqlite3 -box library.db < 04_bonus.sql
 
 # 방법 2) 결과 텍스트까지 자동 생성 (Python 내장 sqlite3 사용)
 python3 run_all.py
+
+# 결과 스크린샷(PNG) 다시 만들기 — 쿼리를 재실행해 results/screenshots/ 에 저장
+python3 make_screenshots.py
 ```
 
 DBeaver에서 실행할 때는 SQLite 연결을 만든 뒤 각 파일을 열어 **스크립트 실행(Alt+X)** 하면 됩니다.
@@ -123,9 +128,17 @@ FK가 선언만 된 게 아니라 **실제로 막히는지** 확인한 기록은
 | Q19 | 인덱스 | rental.member_id 인덱스 생성 후 사용 여부 확인 |
 
 - 범주별 개수 : 기본 조회 5 · 조인 4(INNER 3, LEFT 1) · 집계 4 · 서브쿼리 2 · 수정/삭제 3 · 인덱스 1 = **19개**
-- 쿼리마다 바로 위에 `-- 설명:` 한 줄로 "무엇을 확인하는 쿼리인지" 적어 두었고, 실행 결과는 [results/](results/)에 쿼리별 텍스트로 남겼습니다.
+- 쿼리마다 바로 위에 `-- 설명:` 한 줄로 "무엇을 확인하는 쿼리인지" 적어 두었습니다.
+- 실행 결과는 **텍스트와 스크린샷 두 가지**로 남겼습니다 — [results/](results/)의 쿼리별 `.txt`와 [results/screenshots/](results/screenshots/)의 `.png` 28장.
 - Q16~Q18은 데이터를 바꾸므로 조회 쿼리 뒤에 두었고, 각 결과 파일에 **변경 전·후 조회**를 함께 남겼습니다.
 - 인덱스 선정 이유는 위 [도메인 설계 → 인덱스](#인덱스) 참고.
+
+아래는 Q16(연체 상태 UPDATE)의 실행 결과 스크린샷입니다. 변경 전 조회 → `UPDATE` 3건 반영 → 변경 후 조회가 한 화면에 남습니다.
+
+![Q16 실행 결과](results/screenshots/Q16.png)
+
+> 스크린샷은 `make_screenshots.py`가 `01`~`02`로 DB를 새로 만든 뒤 각 쿼리를 **실제로 다시 실행**하고,
+> 그 결과 화면을 헤드리스 Chrome으로 캡처한 이미지입니다. 같은 명령을 돌리면 누구나 동일한 이미지를 다시 얻을 수 있습니다.
 
 ## 보너스 과제 (04_bonus.sql)
 
