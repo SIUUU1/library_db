@@ -1,0 +1,72 @@
+digraph ERD {
+  graph [rankdir=LR, bgcolor="white", fontname="Noto Sans CJK KR", pad="0.4", nodesep="0.6", ranksep="1.1",
+         label="도서 대여 DB ERD  (PK = 기본키, FK = 외래키, UQ = UNIQUE, NN = NOT NULL)", labelloc=t, fontsize=18];
+  node  [shape=plain, fontname="Noto Sans CJK KR", fontsize=12];
+  edge  [fontname="Noto Sans CJK KR", fontsize=11, color="#555555", arrowhead=crowodot, arrowtail=teetee, dir=both];
+
+  category [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
+      <tr><td colspan="3" bgcolor="#2F5D8A"><font color="white"><b>category</b> (카테고리)</font></td></tr>
+      <tr><td><b>PK</b></td><td align="left">category_id</td><td port="pk" align="left">INTEGER</td></tr>
+      <tr><td>UQ NN</td><td align="left">name</td><td align="left">VARCHAR(50)</td></tr>
+      <tr><td></td><td align="left">description</td><td align="left">VARCHAR(200)</td></tr>
+    </table>>];
+
+  member [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
+      <tr><td colspan="3" bgcolor="#2F5D8A"><font color="white"><b>member</b> (회원)</font></td></tr>
+      <tr><td><b>PK</b></td><td align="left">member_id</td><td port="pk" align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">name</td><td align="left">VARCHAR(50)</td></tr>
+      <tr><td>UQ NN</td><td align="left">email</td><td align="left">VARCHAR(100)</td></tr>
+      <tr><td></td><td align="left">phone</td><td align="left">VARCHAR(20)</td></tr>
+      <tr><td>NN</td><td align="left">joined_at</td><td align="left">DATE</td></tr>
+      <tr><td>NN</td><td align="left">status</td><td align="left">VARCHAR(20)</td></tr>
+    </table>>];
+
+  book [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
+      <tr><td colspan="3" bgcolor="#2F5D8A"><font color="white"><b>book</b> (도서)</font></td></tr>
+      <tr><td><b>PK</b></td><td align="left">book_id</td><td port="pk" align="left">INTEGER</td></tr>
+      <tr><td port="fk_cat"><b>FK</b> NN</td><td align="left">category_id</td><td align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">title</td><td align="left">VARCHAR(200)</td></tr>
+      <tr><td>NN</td><td align="left">author</td><td align="left">VARCHAR(100)</td></tr>
+      <tr><td></td><td align="left">publisher</td><td align="left">VARCHAR(100)</td></tr>
+      <tr><td>UQ NN</td><td align="left">isbn</td><td align="left">VARCHAR(20)</td></tr>
+      <tr><td></td><td align="left">published_year</td><td align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">price</td><td align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">total_copies</td><td align="left">INTEGER</td></tr>
+    </table>>];
+
+  rental [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
+      <tr><td colspan="3" bgcolor="#3E7C59"><font color="white"><b>rental</b> (대여 기록)</font></td></tr>
+      <tr><td><b>PK</b></td><td align="left">rental_id</td><td align="left">INTEGER</td></tr>
+      <tr><td port="fk_mem"><b>FK</b> NN</td><td align="left">member_id</td><td align="left">INTEGER</td></tr>
+      <tr><td port="fk_book"><b>FK</b> NN</td><td align="left">book_id</td><td align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">rented_at</td><td align="left">DATE</td></tr>
+      <tr><td>NN</td><td align="left">due_date</td><td align="left">DATE</td></tr>
+      <tr><td></td><td align="left">returned_at</td><td align="left">DATE</td></tr>
+      <tr><td>NN</td><td align="left">status</td><td align="left">VARCHAR(20)</td></tr>
+    </table>>];
+
+  review [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
+      <tr><td colspan="3" bgcolor="#3E7C59"><font color="white"><b>review</b> (리뷰)</font></td></tr>
+      <tr><td><b>PK</b></td><td align="left">review_id</td><td align="left">INTEGER</td></tr>
+      <tr><td port="fk_mem"><b>FK</b> NN</td><td align="left">member_id</td><td align="left">INTEGER</td></tr>
+      <tr><td port="fk_book"><b>FK</b> NN</td><td align="left">book_id</td><td align="left">INTEGER</td></tr>
+      <tr><td>NN</td><td align="left">rating (1~5)</td><td align="left">INTEGER</td></tr>
+      <tr><td></td><td align="left">content</td><td align="left">VARCHAR(500)</td></tr>
+      <tr><td>NN</td><td align="left">created_at</td><td align="left">DATE</td></tr>
+      <tr><td colspan="3">UNIQUE (member_id, book_id)</td></tr>
+    </table>>];
+
+  { rank=same; category; member; }
+  { rank=same; rental; review; }
+
+  category:pk:e -> book:fk_cat:w    [label=" 1 : N "];
+  member:pk:e -> rental:fk_mem:w  [label=" 1 : N "];
+  book:pk:e -> rental:fk_book:w [label=" 1 : N "];
+  member:pk:e -> review:fk_mem:w  [label=" 1 : N "];
+  book:pk:e -> review:fk_book:w [label=" 1 : N "];
+}
