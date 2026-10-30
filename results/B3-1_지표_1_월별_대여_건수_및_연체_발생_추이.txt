@@ -1,0 +1,35 @@
+-- [B3-1] 지표 1. 월별 대여 건수 및 연체 발생 추이
+-- 설명: 월별로 대여 건수, 그중 연체된 건수(늦게 반납 + 기한 지난 미반납), 연체율(%)을 확인한다.
+SELECT SUBSTR(rented_at, 1, 7) AS rental_month,
+       COUNT(*) AS rental_count,
+       SUM(CASE WHEN returned_at > due_date
+                  OR (returned_at IS NULL AND due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN returned_at > due_date
+                                OR (returned_at IS NULL AND due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(*), 1) AS overdue_rate_pct
+FROM rental
+GROUP BY SUBSTR(rented_at, 1, 7)
+ORDER BY rental_month;
+
+----- 실행 결과 -----
+
+sqlite> SELECT SUBSTR(rented_at, 1, 7) AS rental_month,
+       COUNT(*) AS rental_count,
+       SUM(CASE WHEN returned_at > due_date
+                  OR (returned_at IS NULL AND due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN returned_at > due_date
+                                OR (returned_at IS NULL AND due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(*), 1) AS overdue_rate_pct
+FROM rental
+GROUP BY SUBSTR(rented_at, 1, 7)
+ORDER BY rental_month;
++--------------+--------------+---------------+------------------+
+| rental_month | rental_count | overdue_count | overdue_rate_pct |
++--------------+--------------+---------------+------------------+
+| 2026-08      | 5            | 2             | 40.0             |
+| 2026-09      | 7            | 2             | 28.6             |
+| 2026-10      | 9            | 2             | 22.2             |
++--------------+--------------+---------------+------------------+
+(3 rows)

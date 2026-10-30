@@ -1,0 +1,34 @@
+-- [Q17] (UPDATE) 반납 처리
+-- 설명: 17번 대여 건이 오늘 반납되었을 때 반납일과 상태를 함께 갱신한다.
+SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 전
+
+UPDATE rental
+SET returned_at = '2026-10-29',
+    status      = 'RETURNED'
+WHERE rental_id = 17;
+
+SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 후
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 전
++-----------+-----------+---------+------------+-------------+--------+
+| rental_id | member_id | book_id | due_date   | returned_at | status |
++-----------+-----------+---------+------------+-------------+--------+
+| 17        | 5         | 9       | 2026-10-30 | NULL        | RENTED |
++-----------+-----------+---------+------------+-------------+--------+
+(1 rows)
+
+sqlite> UPDATE rental
+SET returned_at = '2026-10-29',
+    status      = 'RETURNED'
+WHERE rental_id = 17;
+OK — 1 row(s) affected
+
+sqlite> SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 후
++-----------+-----------+---------+------------+-------------+----------+
+| rental_id | member_id | book_id | due_date   | returned_at | status   |
++-----------+-----------+---------+------------+-------------+----------+
+| 17        | 5         | 9       | 2026-10-30 | 2026-10-29  | RETURNED |
++-----------+-----------+---------+------------+-------------+----------+
+(1 rows)

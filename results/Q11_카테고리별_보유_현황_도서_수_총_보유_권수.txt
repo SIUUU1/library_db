@@ -1,0 +1,36 @@
+-- [Q11] 카테고리별 보유 현황 (도서 수 · 총 보유 권수 · 평균 가격)
+-- 설명: COUNT, SUM, AVG + GROUP BY로 카테고리마다 도서 종류 수, 총 보유 권수, 평균 정가를 확인한다.
+SELECT c.name                       AS category_name,
+       COUNT(b.book_id)             AS book_count,
+       COALESCE(SUM(b.total_copies), 0) AS total_copies,
+       ROUND(AVG(b.price), 0)       AS avg_price
+FROM category c
+LEFT JOIN book b ON c.category_id = b.category_id
+GROUP BY c.category_id, c.name
+ORDER BY book_count DESC, c.category_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT c.name                       AS category_name,
+       COUNT(b.book_id)             AS book_count,
+       COALESCE(SUM(b.total_copies), 0) AS total_copies,
+       ROUND(AVG(b.price), 0)       AS avg_price
+FROM category c
+LEFT JOIN book b ON c.category_id = b.category_id
+GROUP BY c.category_id, c.name
+ORDER BY book_count DESC, c.category_id;
++---------------+------------+--------------+-----------+
+| category_name | book_count | total_copies | avg_price |
++---------------+------------+--------------+-----------+
+| 소설          | 4          | 10           | 14500.0   |
+| IT/컴퓨터     | 3          | 7            | 29000.0   |
+| 과학          | 2          | 3            | 19500.0   |
+| 시/에세이     | 1          | 1            | 13800.0   |
+| 인문          | 1          | 2            | 22000.0   |
+| 역사          | 1          | 1            | 28000.0   |
+| 경제/경영     | 1          | 2            | 17800.0   |
+| 자기계발      | 1          | 2            | 16000.0   |
+| 예술          | 1          | 1            | 45000.0   |
+| 어린이        | 0          | 0            | NULL      |
++---------------+------------+--------------+-----------+
+(10 rows)

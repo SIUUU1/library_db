@@ -1,0 +1,30 @@
+-- [Q18] (DELETE) 리뷰 삭제
+-- 설명: 작성자 요청에 따라 13번 리뷰를 삭제하고, 리뷰 건수가 15 → 14로 줄었는지 확인한다.
+SELECT COUNT(*) AS review_count_before FROM review;
+
+DELETE FROM review
+WHERE review_id = 13;
+
+SELECT COUNT(*) AS review_count_after FROM review;
+
+----- 실행 결과 -----
+
+sqlite> SELECT COUNT(*) AS review_count_before FROM review;
++---------------------+
+| review_count_before |
++---------------------+
+| 15                  |
++---------------------+
+(1 rows)
+
+sqlite> DELETE FROM review
+WHERE review_id = 13;
+OK — 1 row(s) affected
+
+sqlite> SELECT COUNT(*) AS review_count_after FROM review;
++--------------------+
+| review_count_after |
++--------------------+
+| 14                 |
++--------------------+
+(1 rows)

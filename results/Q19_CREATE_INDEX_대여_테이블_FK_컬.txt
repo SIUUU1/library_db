@@ -1,0 +1,29 @@
+-- [Q19] (CREATE INDEX) 대여 테이블 FK 컬럼에 인덱스 추가
+-- 설명: 회원별 대여 조회 성능을 위해 rental.member_id 에 인덱스를 만들고 실제로 쓰이는지 확인한다.
+-- 적용 이유: rental.member_id는 JOIN과 '회원별 대여 내역' WHERE 조건에 가장 자주 쓰이는데,
+--           SQLite는 FK 컬럼에 인덱스를 자동으로 만들지 않아 전체 스캔이 일어나기 때문이다.
+CREATE INDEX idx_rental_member_id ON rental (member_id);
+
+-- 적용 이유: 연체 점검(Q16)처럼 status와 due_date를 함께 조건으로 거는 조회가 반복되기 때문이다.
+CREATE INDEX idx_rental_status_due ON rental (status, due_date);
+
+-- [SQLite 전용] EXPLAIN QUERY PLAN : 쿼리가 인덱스를 사용하는지 확인 (MySQL/PostgreSQL은 EXPLAIN)
+EXPLAIN QUERY PLAN
+SELECT * FROM rental WHERE member_id = 1;
+
+----- 실행 결과 -----
+
+sqlite> CREATE INDEX idx_rental_member_id ON rental (member_id);
+OK
+
+sqlite> CREATE INDEX idx_rental_status_due ON rental (status, due_date);
+OK
+
+sqlite> EXPLAIN QUERY PLAN
+SELECT * FROM rental WHERE member_id = 1;
++----+--------+---------+--------------------------------------------------------------+
+| id | parent | notused | detail                                                       |
++----+--------+---------+--------------------------------------------------------------+
+| 3  | 0      | 61      | SEARCH rental USING INDEX idx_rental_member_id (member_id=?) |
++----+--------+---------+--------------------------------------------------------------+
+(1 rows)

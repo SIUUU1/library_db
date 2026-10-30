@@ -1,0 +1,23 @@
+-- [Q02] 가격이 높은 도서 TOP 5
+-- 설명: ORDER BY + LIMIT로 정가가 가장 비싼 도서 5권을 확인한다.
+SELECT title, author, price
+FROM book
+ORDER BY price DESC
+LIMIT 5;
+
+----- 실행 결과 -----
+
+sqlite> SELECT title, author, price
+FROM book
+ORDER BY price DESC
+LIMIT 5;
++---------------+-------------------+-------+
+| title         | author            | price |
++---------------+-------------------+-------+
+| 서양미술사    | E. H. 곰브리치    | 45000 |
+| 이것이 자바다 | 신용권            | 36000 |
+| 클린 코드     | 로버트 C. 마틴    | 33000 |
+| 총 균 쇠      | 재레드 다이아몬드 | 28000 |
+| 사피엔스      | 유발 하라리       | 22000 |
++---------------+-------------------+-------+
+(5 rows)

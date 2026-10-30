@@ -1,0 +1,8 @@
+-- [B2-3] 대여 기록이 있는 회원 삭제 (실패 예상)
+-- 설명: 자식(rental, review)이 참조 중인 부모(member 1번)를 지우면 '고아 데이터'가 생기므로 막히는지 확인한다.
+DELETE FROM member WHERE member_id = 1;
+
+----- 실행 결과 -----
+
+sqlite> DELETE FROM member WHERE member_id = 1;
+ERROR: FOREIGN KEY constraint failed

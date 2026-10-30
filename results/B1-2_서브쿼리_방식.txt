@@ -1,0 +1,46 @@
+-- [B1-2] 서브쿼리 방식
+-- 설명: 안쪽에서 'IT/컴퓨터 도서를 빌린 member_id 목록'을 먼저 만들고, 바깥에서 그 목록에 속한 회원만 고른다.
+SELECT m.member_id, m.name
+FROM member m
+WHERE m.member_id IN (
+    SELECT r.member_id
+    FROM rental r
+    WHERE r.book_id IN (
+        SELECT b.book_id
+        FROM book b
+        WHERE b.category_id = (SELECT category_id FROM category WHERE name = 'IT/컴퓨터')
+    )
+)
+ORDER BY m.member_id;
+
+-- 비교 정리
+--  - 결과 : 두 쿼리 결과는 같다 (김민준, 강시우, 정하은).
+--  - JOIN : 여러 테이블의 컬럼(도서명, 대여일 등)을 결과에 함께 보여줄 수 있다.
+--           대신 1:N 관계 때문에 같은 회원이 여러 행으로 늘어나므로 DISTINCT가 필요하다.
+--  - 서브쿼리 : "조건 판단"에만 다른 테이블을 쓰므로 중복이 생기지 않고, 읽는 순서가 요구사항 문장과 비슷하다.
+--           대신 안쪽 테이블의 컬럼을 결과에 꺼낼 수 없다.
+--  - 성능 : 최신 옵티마이저는 IN 서브쿼리를 조인으로 바꿔 실행하는 경우가 많아 소규모 데이터에선 차이가 거의 없다.
+--           결과에 여러 테이블 정보가 필요하면 JOIN, "존재 여부"만 필요하면 서브쿼리(IN/EXISTS)가 자연스럽다.
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id, m.name
+FROM member m
+WHERE m.member_id IN (
+    SELECT r.member_id
+    FROM rental r
+    WHERE r.book_id IN (
+        SELECT b.book_id
+        FROM book b
+        WHERE b.category_id = (SELECT category_id FROM category WHERE name = 'IT/컴퓨터')
+    )
+)
+ORDER BY m.member_id;
++-----------+--------+
+| member_id | name   |
++-----------+--------+
+| 1         | 김민준 |
+| 5         | 정하은 |
+| 6         | 강시우 |
++-----------+--------+
+(3 rows)

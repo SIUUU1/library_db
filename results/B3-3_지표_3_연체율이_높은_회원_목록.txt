@@ -1,0 +1,50 @@
+-- [B3-3] 지표 3. 연체율이 높은 회원 목록
+-- 설명: 회원별 전체 대여 중 연체된 비율을 계산해, 연체 이력이 있는 회원을 연체율 높은 순으로 확인한다.
+SELECT m.member_id,
+       m.name,
+       m.status AS member_status,
+       COUNT(r.rental_id) AS rental_count,
+       SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN r.returned_at > r.due_date
+                                OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(r.rental_id), 1) AS overdue_rate_pct
+FROM member m
+INNER JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name, m.status
+HAVING SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) > 0     -- 표준 SQL은 HAVING에서 별칭을 못 쓰므로 식을 다시 적는다
+ORDER BY overdue_rate_pct DESC, overdue_count DESC, m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id,
+       m.name,
+       m.status AS member_status,
+       COUNT(r.rental_id) AS rental_count,
+       SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN r.returned_at > r.due_date
+                                OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(r.rental_id), 1) AS overdue_rate_pct
+FROM member m
+INNER JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name, m.status
+HAVING SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) > 0     -- 표준 SQL은 HAVING에서 별칭을 못 쓰므로 식을 다시 적는다
+ORDER BY overdue_rate_pct DESC, overdue_count DESC, m.member_id;
++-----------+--------+---------------+--------------+---------------+------------------+
+| member_id | name   | member_status | rental_count | overdue_count | overdue_rate_pct |
++-----------+--------+---------------+--------------+---------------+------------------+
+| 8         | 윤예준 | SUSPENDED     | 1            | 1             | 100.0            |
+| 9         | 장서윤 | ACTIVE        | 1            | 1             | 100.0            |
+| 4         | 최지우 | ACTIVE        | 2            | 1             | 50.0             |
+| 6         | 강시우 | ACTIVE        | 2            | 1             | 50.0             |
+| 1         | 김민준 | ACTIVE        | 4            | 1             | 25.0             |
+| 2         | 이서연 | ACTIVE        | 4            | 1             | 25.0             |
++-----------+--------+---------------+--------------+---------------+------------------+
+(6 rows)

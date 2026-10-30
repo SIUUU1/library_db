@@ -1,0 +1,28 @@
+-- [Q13] 월별 대여 건수 추이
+-- 설명: 대여일의 'YYYY-MM' 부분으로 GROUP BY 해 월별 대여 건수와 대여된 책 정가 합계를 확인한다.
+--       ※ SUBSTR는 SQLite/MySQL/PostgreSQL 공통. (SQLite 전용으로는 strftime('%Y-%m', rented_at)도 가능)
+SELECT SUBSTR(r.rented_at, 1, 7) AS rental_month,
+       COUNT(*)                  AS rental_count,
+       SUM(b.price)              AS total_book_price
+FROM rental r
+INNER JOIN book b ON r.book_id = b.book_id
+GROUP BY SUBSTR(r.rented_at, 1, 7)
+ORDER BY rental_month;
+
+----- 실행 결과 -----
+
+sqlite> SELECT SUBSTR(r.rented_at, 1, 7) AS rental_month,
+       COUNT(*)                  AS rental_count,
+       SUM(b.price)              AS total_book_price
+FROM rental r
+INNER JOIN book b ON r.book_id = b.book_id
+GROUP BY SUBSTR(r.rented_at, 1, 7)
+ORDER BY rental_month;
++--------------+--------------+------------------+
+| rental_month | rental_count | total_book_price |
++--------------+--------------+------------------+
+| 2026-08      | 5            | 102000           |
+| 2026-09      | 7            | 164800           |
+| 2026-10      | 8            | 155000           |
++--------------+--------------+------------------+
+(3 rows)

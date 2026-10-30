@@ -1,0 +1,33 @@
+-- [Q07] (INNER JOIN) 도서 목록과 카테고리명
+-- 설명: book-category를 INNER JOIN 해 category_id 숫자 대신 카테고리 이름으로 도서 목록을 확인한다.
+SELECT b.book_id, b.title, c.name AS category_name, b.price
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+ORDER BY c.category_id, b.book_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.book_id, b.title, c.name AS category_name, b.price
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+ORDER BY c.category_id, b.book_id;
++---------+---------------------+---------------+-------+
+| book_id | title               | category_name | price |
++---------+---------------------+---------------+-------+
+| 1       | 채식주의자          | 소설          | 15000 |
+| 2       | 소년이 온다         | 소설          | 15000 |
+| 3       | 아몬드              | 소설          | 14000 |
+| 4       | 불편한 편의점       | 소설          | 14000 |
+| 14      | 언어의 온도         | 시/에세이     | 13800 |
+| 5       | 사피엔스            | 인문          | 22000 |
+| 6       | 총 균 쇠            | 역사          | 28000 |
+| 7       | 코스모스            | 과학          | 19000 |
+| 8       | 이기적 유전자       | 과학          | 20000 |
+| 9       | 클린 코드           | IT/컴퓨터     | 33000 |
+| 10      | 이것이 자바다       | IT/컴퓨터     | 36000 |
+| 11      | SQL 첫걸음          | IT/컴퓨터     | 18000 |
+| 12      | 돈의 속성           | 경제/경영     | 17800 |
+| 13      | 아주 작은 습관의 힘 | 자기계발      | 16000 |
+| 15      | 서양미술사          | 예술          | 45000 |
++---------+---------------------+---------------+-------+
+(15 rows)

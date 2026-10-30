@@ -1,0 +1,44 @@
+-- [B2-4] 해결 방법 : 부모 데이터를 먼저 만들고, 올바른 키로 자식 데이터를 입력
+-- 설명: 회원(13번)을 먼저 INSERT 한 뒤 그 회원 번호로 rental을 INSERT 하면 성공하는지 확인한다.
+INSERT INTO member (member_id, name, email, phone, joined_at, status)
+VALUES (13, '서준호', 'junho.seo@example.com', '010-1234-0013', '2026-10-29', 'ACTIVE');
+
+INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 13, 3, '2026-10-29', '2026-11-12', 'RENTED');
+
+SELECT r.rental_id, m.name, b.title, r.rented_at, r.due_date, r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.rental_id = 21;
+
+-- 정리
+--  - 왜 막히나 : FK는 "자식 테이블의 값은 반드시 부모 테이블의 PK에 존재해야 한다"는 규칙이다.
+--               없는 회원(999)·없는 카테고리(50)를 가리키면 누구의 대여인지, 어떤 분류인지 알 수 없는 데이터가 되므로 DB가 거부한다.
+--               반대로 자식이 참조 중인 부모를 지우면 남은 대여 기록이 존재하지 않는 회원을 가리키게 되므로 삭제도 거부한다.
+--  - 어떻게 고치나 : (1) 부모 행을 먼저 INSERT 하고 자식을 INSERT 한다 (입력 순서 = category/member → book → rental/review)
+--                   (2) 오타라면 실제 존재하는 키 값으로 고친다.
+--                   (3) 회원 삭제가 꼭 필요하면 자식 데이터를 먼저 정리하거나, 실무에선 status='WITHDRAWN' 처럼 상태값으로 비활성화한다.
+--  - SQLite 주의 : PRAGMA foreign_keys = ON 을 빠뜨리면 위 입력이 모두 '성공'해 버린다. FK가 실제로 동작하게 하려면 반드시 켠다.
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO member (member_id, name, email, phone, joined_at, status)
+VALUES (13, '서준호', 'junho.seo@example.com', '010-1234-0013', '2026-10-29', 'ACTIVE');
+OK — 1 row(s) affected
+
+sqlite> INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 13, 3, '2026-10-29', '2026-11-12', 'RENTED');
+OK — 1 row(s) affected
+
+sqlite> SELECT r.rental_id, m.name, b.title, r.rented_at, r.due_date, r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.rental_id = 21;
++-----------+--------+--------+------------+------------+--------+
+| rental_id | name   | title  | rented_at  | due_date   | status |
++-----------+--------+--------+------------+------------+--------+
+| 21        | 서준호 | 아몬드 | 2026-10-29 | 2026-11-12 | RENTED |
++-----------+--------+--------+------------+------------+--------+
+(1 rows)

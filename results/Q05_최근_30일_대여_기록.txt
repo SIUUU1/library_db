@@ -1,0 +1,28 @@
+-- [Q05] 최근 30일 대여 기록
+-- 설명: 기준일(2026-10-29)로부터 최근 30일(2026-09-29 ~ 2026-10-29) 동안의 대여 기록을 확인한다.
+--       ※ 날짜를 'YYYY-MM-DD' 문자열로 저장해 표준 BETWEEN 비교로 작성했다.
+--         오늘 날짜를 자동으로 쓰려면 SQLite: date('now','-30 days') / MySQL: CURDATE() - INTERVAL 30 DAY
+SELECT rental_id, member_id, book_id, rented_at, status
+FROM rental
+WHERE rented_at BETWEEN '2026-09-29' AND '2026-10-29'
+ORDER BY rented_at DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, rented_at, status
+FROM rental
+WHERE rented_at BETWEEN '2026-09-29' AND '2026-10-29'
+ORDER BY rented_at DESC;
++-----------+-----------+---------+------------+----------+
+| rental_id | member_id | book_id | rented_at  | status   |
++-----------+-----------+---------+------------+----------+
+| 20        | 2         | 7       | 2026-10-25 | RENTED   |
+| 19        | 6         | 11      | 2026-10-22 | RENTED   |
+| 18        | 10        | 4       | 2026-10-20 | RENTED   |
+| 17        | 5         | 9       | 2026-10-16 | RENTED   |
+| 16        | 1         | 5       | 2026-10-12 | RENTED   |
+| 15        | 4         | 8       | 2026-10-08 | RETURNED |
+| 14        | 9         | 1       | 2026-10-05 | RENTED   |
+| 13        | 2         | 3       | 2026-10-01 | RETURNED |
++-----------+-----------+---------+------------+----------+
+(8 rows)

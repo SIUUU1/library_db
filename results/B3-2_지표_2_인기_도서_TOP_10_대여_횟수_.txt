@@ -1,0 +1,40 @@
+-- [B3-2] 지표 2. 인기 도서 TOP 10 (대여 횟수 기준, 동률이면 평균 평점 순)
+-- 설명: 대여 횟수와 평균 평점을 함께 집계해 가장 많이 빌려간 도서 10권을 확인한다.
+SELECT b.title,
+       c.name AS category_name,
+       COUNT(r.rental_id) AS rental_count,
+       (SELECT ROUND(AVG(rv.rating), 2) FROM review rv WHERE rv.book_id = b.book_id) AS avg_rating
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+LEFT JOIN rental r    ON b.book_id = r.book_id
+GROUP BY b.book_id, b.title, c.name
+ORDER BY rental_count DESC, avg_rating DESC, b.book_id
+LIMIT 10;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.title,
+       c.name AS category_name,
+       COUNT(r.rental_id) AS rental_count,
+       (SELECT ROUND(AVG(rv.rating), 2) FROM review rv WHERE rv.book_id = b.book_id) AS avg_rating
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+LEFT JOIN rental r    ON b.book_id = r.book_id
+GROUP BY b.book_id, b.title, c.name
+ORDER BY rental_count DESC, avg_rating DESC, b.book_id
+LIMIT 10;
++---------------------+---------------+--------------+------------+
+| title               | category_name | rental_count | avg_rating |
++---------------------+---------------+--------------+------------+
+| 클린 코드           | IT/컴퓨터     | 3            | 4.0        |
+| 아몬드              | 소설          | 2            | 5.0        |
+| 사피엔스            | 인문          | 2            | 5.0        |
+| 채식주의자          | 소설          | 2            | 4.5        |
+| 불편한 편의점       | 소설          | 2            | 4.5        |
+| 코스모스            | 과학          | 2            | 4.0        |
+| SQL 첫걸음          | IT/컴퓨터     | 2            | 4.0        |
+| 소년이 온다         | 소설          | 1            | 5.0        |
+| 총 균 쇠            | 역사          | 1            | 4.0        |
+| 아주 작은 습관의 힘 | 자기계발      | 1            | 4.0        |
++---------------------+---------------+--------------+------------+
+(10 rows)

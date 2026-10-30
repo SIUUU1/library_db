@@ -1,0 +1,26 @@
+-- [Q04] 제목·저자 키워드 검색
+-- 설명: LIKE로 제목에 'SQL' 또는 '코드'가 들어가거나 저자가 '한강'인 도서를 검색한다.
+SELECT book_id, title, author
+FROM book
+WHERE title LIKE '%SQL%'
+   OR title LIKE '%코드%'
+   OR author = '한강'
+ORDER BY book_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT book_id, title, author
+FROM book
+WHERE title LIKE '%SQL%'
+   OR title LIKE '%코드%'
+   OR author = '한강'
+ORDER BY book_id;
++---------+-------------+----------------+
+| book_id | title       | author         |
++---------+-------------+----------------+
+| 1       | 채식주의자  | 한강           |
+| 2       | 소년이 온다 | 한강           |
+| 9       | 클린 코드   | 로버트 C. 마틴 |
+| 11      | SQL 첫걸음  | 아사이 아츠시  |
++---------+-------------+----------------+
+(4 rows)

@@ -1,0 +1,10 @@
+-- [B2-1] 존재하지 않는 회원으로 대여 기록 입력 (실패 예상)
+-- 설명: member 테이블에 없는 member_id = 999 로 rental을 INSERT 하면 FK 위반으로 막히는지 확인한다.
+INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 999, 3, '2026-10-29', '2026-11-12', 'RENTED');
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 999, 3, '2026-10-29', '2026-11-12', 'RENTED');
+ERROR: FOREIGN KEY constraint failed

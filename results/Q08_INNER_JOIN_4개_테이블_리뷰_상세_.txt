@@ -1,0 +1,46 @@
+-- [Q08] (INNER JOIN 4개 테이블) 리뷰 상세 — 작성자·도서·카테고리
+-- 설명: review-member-book-category를 연결해 평점 4점 이상 리뷰를 작성자·도서·카테고리와 함께 확인한다.
+SELECT rv.review_id,
+       m.name     AS reviewer,
+       b.title    AS book_title,
+       c.name     AS category_name,
+       rv.rating,
+       rv.created_at
+FROM review rv
+INNER JOIN member   m ON rv.member_id  = m.member_id
+INNER JOIN book     b ON rv.book_id    = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE rv.rating >= 4
+ORDER BY rv.rating DESC, rv.created_at DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rv.review_id,
+       m.name     AS reviewer,
+       b.title    AS book_title,
+       c.name     AS category_name,
+       rv.rating,
+       rv.created_at
+FROM review rv
+INNER JOIN member   m ON rv.member_id  = m.member_id
+INNER JOIN book     b ON rv.book_id    = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE rv.rating >= 4
+ORDER BY rv.rating DESC, rv.created_at DESC;
++-----------+----------+---------------------+---------------+--------+------------+
+| review_id | reviewer | book_title          | category_name | rating | created_at |
++-----------+----------+---------------------+---------------+--------+------------+
+| 12        | 이서연   | 아몬드              | 소설          | 5      | 2026-10-15 |
+| 15        | 조수아   | 채식주의자          | 소설          | 5      | 2026-10-10 |
+| 5         | 최지우   | 불편한 편의점       | 소설          | 5      | 2026-09-21 |
+| 7         | 이서연   | 소년이 온다         | 소설          | 5      | 2026-09-20 |
+| 3         | 박도윤   | 사피엔스            | 인문          | 5      | 2026-08-25 |
+| 1         | 김민준   | 클린 코드           | IT/컴퓨터     | 5      | 2026-08-16 |
+| 14        | 임주원   | 불편한 편의점       | 소설          | 4      | 2026-10-27 |
+| 11        | 박도윤   | 총 균 쇠            | 역사          | 4      | 2026-10-09 |
+| 9         | 조수아   | 아주 작은 습관의 힘 | 자기계발      | 4      | 2026-09-28 |
+| 6         | 정하은   | 코스모스            | 과학          | 4      | 2026-09-15 |
+| 4         | 김민준   | SQL 첫걸음          | IT/컴퓨터     | 4      | 2026-09-03 |
+| 2         | 이서연   | 채식주의자          | 소설          | 4      | 2026-08-26 |
++-----------+----------+---------------------+---------------+--------+------------+
+(12 rows)

@@ -1,0 +1,27 @@
+-- [B1-1] JOIN 방식
+-- 설명: rental-book-category-member를 연결한 뒤 같은 회원이 여러 번 나오지 않도록 DISTINCT 처리한다.
+SELECT DISTINCT m.member_id, m.name
+FROM member m
+INNER JOIN rental   r ON m.member_id   = r.member_id
+INNER JOIN book     b ON r.book_id     = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE c.name = 'IT/컴퓨터'
+ORDER BY m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT DISTINCT m.member_id, m.name
+FROM member m
+INNER JOIN rental   r ON m.member_id   = r.member_id
+INNER JOIN book     b ON r.book_id     = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE c.name = 'IT/컴퓨터'
+ORDER BY m.member_id;
++-----------+--------+
+| member_id | name   |
++-----------+--------+
+| 1         | 김민준 |
+| 5         | 정하은 |
+| 6         | 강시우 |
++-----------+--------+
+(3 rows)

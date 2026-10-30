@@ -1,0 +1,20 @@
+-- [Q14] 대여 기록이 없는 회원 찾기
+-- 설명: NOT IN 서브쿼리로 rental 테이블에 한 번도 등장하지 않은 회원을 확인한다.
+SELECT member_id, name, email, joined_at
+FROM member
+WHERE member_id NOT IN (SELECT member_id FROM rental)
+ORDER BY member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT member_id, name, email, joined_at
+FROM member
+WHERE member_id NOT IN (SELECT member_id FROM rental)
+ORDER BY member_id;
++-----------+--------+----------------------+------------+
+| member_id | name   | email                | joined_at  |
++-----------+--------+----------------------+------------+
+| 11        | 한지안 | jian.han@example.com | 2026-09-07 |
+| 12        | 오유나 | yuna.oh@example.com  | 2026-10-20 |
++-----------+--------+----------------------+------------+
+(2 rows)

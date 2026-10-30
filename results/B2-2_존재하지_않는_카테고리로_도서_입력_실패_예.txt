@@ -1,0 +1,10 @@
+-- [B2-2] 존재하지 않는 카테고리로 도서 입력 (실패 예상)
+-- 설명: category 테이블에 없는 category_id = 50 으로 book을 INSERT 하면 막히는지 확인한다.
+INSERT INTO book (book_id, category_id, title, author, publisher, isbn, published_year, price, total_copies)
+VALUES (16, 50, '데이터베이스 개론', '홍길동', '예시출판', '978-89-0000-0016', 2024, 30000, 1);
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO book (book_id, category_id, title, author, publisher, isbn, published_year, price, total_copies)
+VALUES (16, 50, '데이터베이스 개론', '홍길동', '예시출판', '978-89-0000-0016', 2024, 30000, 1);
+ERROR: FOREIGN KEY constraint failed

@@ -1,0 +1,48 @@
+[00] 스키마·샘플 데이터 적재 확인
+설명: 01_schema.sql, 02_insert_data.sql 실행 후 테이블별 행 수와 FK 설정을 확인한다.
+
+-- 테이블별 행 수
++------------+-----------+
+| table_name | row_count |
++------------+-----------+
+| category   | 10        |
+| member     | 12        |
+| book       | 15        |
+| rental     | 20        |
+| review     | 15        |
++------------+-----------+
+(5 rows)
+
+-- FK 활성화 여부 (PRAGMA foreign_keys, 1 = ON)
++--------------+
+| foreign_keys |
++--------------+
+| 1            |
++--------------+
+(1 rows)
+
+-- book 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-------------+-------------+
+| parent_table | fk_column   | parent_pk   |
++--------------+-------------+-------------+
+| category     | category_id | category_id |
++--------------+-------------+-------------+
+(1 rows)
+
+-- rental 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-----------+-----------+
+| parent_table | fk_column | parent_pk |
++--------------+-----------+-----------+
+| book         | book_id   | book_id   |
+| member       | member_id | member_id |
++--------------+-----------+-----------+
+(2 rows)
+
+-- review 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-----------+-----------+
+| parent_table | fk_column | parent_pk |
++--------------+-----------+-----------+
+| book         | book_id   | book_id   |
+| member       | member_id | member_id |
++--------------+-----------+-----------+
+(2 rows)

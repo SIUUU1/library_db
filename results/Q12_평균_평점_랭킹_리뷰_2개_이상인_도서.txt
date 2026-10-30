@@ -1,0 +1,29 @@
+-- [Q12] 평균 평점 랭킹 (리뷰 2개 이상인 도서)
+-- 설명: AVG + GROUP BY + HAVING으로 리뷰가 2개 이상 쌓인 도서만 평균 평점 순위를 확인한다.
+SELECT b.title,
+       COUNT(rv.review_id)     AS review_count,
+       ROUND(AVG(rv.rating), 2) AS avg_rating
+FROM review rv
+INNER JOIN book b ON rv.book_id = b.book_id
+GROUP BY b.book_id, b.title
+HAVING COUNT(rv.review_id) >= 2
+ORDER BY avg_rating DESC, review_count DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.title,
+       COUNT(rv.review_id)     AS review_count,
+       ROUND(AVG(rv.rating), 2) AS avg_rating
+FROM review rv
+INNER JOIN book b ON rv.book_id = b.book_id
+GROUP BY b.book_id, b.title
+HAVING COUNT(rv.review_id) >= 2
+ORDER BY avg_rating DESC, review_count DESC;
++---------------+--------------+------------+
+| title         | review_count | avg_rating |
++---------------+--------------+------------+
+| 불편한 편의점 | 2            | 4.5        |
+| 채식주의자    | 2            | 4.5        |
+| 클린 코드     | 2            | 4.0        |
++---------------+--------------+------------+
+(3 rows)

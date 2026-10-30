@@ -1,0 +1,25 @@
+-- [Q03] 반납 예정일이 임박한 미반납 대여
+-- 설명: 아직 반납되지 않은(returned_at IS NULL) 대여 건을 반납 예정일이 빠른 순으로 확인한다.
+SELECT rental_id, member_id, book_id, rented_at, due_date, status
+FROM rental
+WHERE returned_at IS NULL
+ORDER BY due_date ASC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, rented_at, due_date, status
+FROM rental
+WHERE returned_at IS NULL
+ORDER BY due_date ASC;
++-----------+-----------+---------+------------+------------+--------+
+| rental_id | member_id | book_id | rented_at  | due_date   | status |
++-----------+-----------+---------+------------+------------+--------+
+| 12        | 8         | 12      | 2026-09-28 | 2026-10-12 | RENTED |
+| 14        | 9         | 1       | 2026-10-05 | 2026-10-19 | RENTED |
+| 16        | 1         | 5       | 2026-10-12 | 2026-10-26 | RENTED |
+| 17        | 5         | 9       | 2026-10-16 | 2026-10-30 | RENTED |
+| 18        | 10        | 4       | 2026-10-20 | 2026-11-03 | RENTED |
+| 19        | 6         | 11      | 2026-10-22 | 2026-11-05 | RENTED |
+| 20        | 2         | 7       | 2026-10-25 | 2026-11-08 | RENTED |
++-----------+-----------+---------+------------+------------+--------+
+(7 rows)

@@ -1,0 +1,36 @@
+-- [Q10] 회원별 대여 횟수 (대여 0회 회원 포함)
+-- 설명: LEFT JOIN + COUNT + GROUP BY로 회원마다 몇 번 빌렸는지, 많이 빌린 순으로 확인한다.
+SELECT m.member_id,
+       m.name,
+       COUNT(r.rental_id) AS rental_count       -- COUNT(컬럼)은 NULL을 세지 않으므로 대여 없으면 0
+FROM member m
+LEFT JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name
+ORDER BY rental_count DESC, m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id,
+       m.name,
+       COUNT(r.rental_id) AS rental_count       -- COUNT(컬럼)은 NULL을 세지 않으므로 대여 없으면 0
+FROM member m
+LEFT JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name
+ORDER BY rental_count DESC, m.member_id;
++-----------+--------+--------------+
+| member_id | name   | rental_count |
++-----------+--------+--------------+
+| 1         | 김민준 | 4            |
+| 2         | 이서연 | 4            |
+| 3         | 박도윤 | 2            |
+| 4         | 최지우 | 2            |
+| 5         | 정하은 | 2            |
+| 6         | 강시우 | 2            |
+| 7         | 조수아 | 1            |
+| 8         | 윤예준 | 1            |
+| 9         | 장서윤 | 1            |
+| 10        | 임주원 | 1            |
+| 11        | 한지안 | 0            |
+| 12        | 오유나 | 0            |
++-----------+--------+--------------+
+(12 rows)

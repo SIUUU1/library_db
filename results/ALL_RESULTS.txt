@@ -1,0 +1,1040 @@
+[00] 스키마·샘플 데이터 적재 확인
+설명: 01_schema.sql, 02_insert_data.sql 실행 후 테이블별 행 수와 FK 설정을 확인한다.
+
+-- 테이블별 행 수
++------------+-----------+
+| table_name | row_count |
++------------+-----------+
+| category   | 10        |
+| member     | 12        |
+| book       | 15        |
+| rental     | 20        |
+| review     | 15        |
++------------+-----------+
+(5 rows)
+
+-- FK 활성화 여부 (PRAGMA foreign_keys, 1 = ON)
++--------------+
+| foreign_keys |
++--------------+
+| 1            |
++--------------+
+(1 rows)
+
+-- book 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-------------+-------------+
+| parent_table | fk_column   | parent_pk   |
++--------------+-------------+-------------+
+| category     | category_id | category_id |
++--------------+-------------+-------------+
+(1 rows)
+
+-- rental 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-----------+-----------+
+| parent_table | fk_column | parent_pk |
++--------------+-----------+-----------+
+| book         | book_id   | book_id   |
+| member       | member_id | member_id |
++--------------+-----------+-----------+
+(2 rows)
+
+-- review 테이블의 FK 목록 (PRAGMA foreign_key_list)
++--------------+-----------+-----------+
+| parent_table | fk_column | parent_pk |
++--------------+-----------+-----------+
+| book         | book_id   | book_id   |
+| member       | member_id | member_id |
++--------------+-----------+-----------+
+(2 rows)
+
+================================================================================
+
+-- [Q01] 2015년 이후 출간 도서
+-- 설명: WHERE 조건으로 2015년 이후 출간된 도서만 골라 최신 출간순으로 확인한다.
+SELECT book_id, title, author, published_year
+FROM book
+WHERE published_year >= 2015
+ORDER BY published_year DESC, title;
+
+----- 실행 결과 -----
+
+sqlite> SELECT book_id, title, author, published_year
+FROM book
+WHERE published_year >= 2015
+ORDER BY published_year DESC, title;
++---------+---------------------+----------------+----------------+
+| book_id | title               | author         | published_year |
++---------+---------------------+----------------+----------------+
+| 10      | 이것이 자바다       | 신용권         | 2022           |
+| 4       | 불편한 편의점       | 김호연         | 2021           |
+| 12      | 돈의 속성           | 김승호         | 2020           |
+| 13      | 아주 작은 습관의 힘 | 제임스 클리어  | 2019           |
+| 8       | 이기적 유전자       | 리처드 도킨스  | 2018           |
+| 15      | 서양미술사          | E. H. 곰브리치 | 2017           |
+| 3       | 아몬드              | 손원평         | 2017           |
+| 14      | 언어의 온도         | 이기주         | 2016           |
+| 11      | SQL 첫걸음          | 아사이 아츠시  | 2015           |
+| 5       | 사피엔스            | 유발 하라리    | 2015           |
++---------+---------------------+----------------+----------------+
+(10 rows)
+
+
+================================================================================
+
+-- [Q02] 가격이 높은 도서 TOP 5
+-- 설명: ORDER BY + LIMIT로 정가가 가장 비싼 도서 5권을 확인한다.
+SELECT title, author, price
+FROM book
+ORDER BY price DESC
+LIMIT 5;
+
+----- 실행 결과 -----
+
+sqlite> SELECT title, author, price
+FROM book
+ORDER BY price DESC
+LIMIT 5;
++---------------+-------------------+-------+
+| title         | author            | price |
++---------------+-------------------+-------+
+| 서양미술사    | E. H. 곰브리치    | 45000 |
+| 이것이 자바다 | 신용권            | 36000 |
+| 클린 코드     | 로버트 C. 마틴    | 33000 |
+| 총 균 쇠      | 재레드 다이아몬드 | 28000 |
+| 사피엔스      | 유발 하라리       | 22000 |
++---------------+-------------------+-------+
+(5 rows)
+
+
+================================================================================
+
+-- [Q03] 반납 예정일이 임박한 미반납 대여
+-- 설명: 아직 반납되지 않은(returned_at IS NULL) 대여 건을 반납 예정일이 빠른 순으로 확인한다.
+SELECT rental_id, member_id, book_id, rented_at, due_date, status
+FROM rental
+WHERE returned_at IS NULL
+ORDER BY due_date ASC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, rented_at, due_date, status
+FROM rental
+WHERE returned_at IS NULL
+ORDER BY due_date ASC;
++-----------+-----------+---------+------------+------------+--------+
+| rental_id | member_id | book_id | rented_at  | due_date   | status |
++-----------+-----------+---------+------------+------------+--------+
+| 12        | 8         | 12      | 2026-09-28 | 2026-10-12 | RENTED |
+| 14        | 9         | 1       | 2026-10-05 | 2026-10-19 | RENTED |
+| 16        | 1         | 5       | 2026-10-12 | 2026-10-26 | RENTED |
+| 17        | 5         | 9       | 2026-10-16 | 2026-10-30 | RENTED |
+| 18        | 10        | 4       | 2026-10-20 | 2026-11-03 | RENTED |
+| 19        | 6         | 11      | 2026-10-22 | 2026-11-05 | RENTED |
+| 20        | 2         | 7       | 2026-10-25 | 2026-11-08 | RENTED |
++-----------+-----------+---------+------------+------------+--------+
+(7 rows)
+
+
+================================================================================
+
+-- [Q04] 제목·저자 키워드 검색
+-- 설명: LIKE로 제목에 'SQL' 또는 '코드'가 들어가거나 저자가 '한강'인 도서를 검색한다.
+SELECT book_id, title, author
+FROM book
+WHERE title LIKE '%SQL%'
+   OR title LIKE '%코드%'
+   OR author = '한강'
+ORDER BY book_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT book_id, title, author
+FROM book
+WHERE title LIKE '%SQL%'
+   OR title LIKE '%코드%'
+   OR author = '한강'
+ORDER BY book_id;
++---------+-------------+----------------+
+| book_id | title       | author         |
++---------+-------------+----------------+
+| 1       | 채식주의자  | 한강           |
+| 2       | 소년이 온다 | 한강           |
+| 9       | 클린 코드   | 로버트 C. 마틴 |
+| 11      | SQL 첫걸음  | 아사이 아츠시  |
++---------+-------------+----------------+
+(4 rows)
+
+
+================================================================================
+
+-- [Q05] 최근 30일 대여 기록
+-- 설명: 기준일(2026-10-29)로부터 최근 30일(2026-09-29 ~ 2026-10-29) 동안의 대여 기록을 확인한다.
+--       ※ 날짜를 'YYYY-MM-DD' 문자열로 저장해 표준 BETWEEN 비교로 작성했다.
+--         오늘 날짜를 자동으로 쓰려면 SQLite: date('now','-30 days') / MySQL: CURDATE() - INTERVAL 30 DAY
+SELECT rental_id, member_id, book_id, rented_at, status
+FROM rental
+WHERE rented_at BETWEEN '2026-09-29' AND '2026-10-29'
+ORDER BY rented_at DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, rented_at, status
+FROM rental
+WHERE rented_at BETWEEN '2026-09-29' AND '2026-10-29'
+ORDER BY rented_at DESC;
++-----------+-----------+---------+------------+----------+
+| rental_id | member_id | book_id | rented_at  | status   |
++-----------+-----------+---------+------------+----------+
+| 20        | 2         | 7       | 2026-10-25 | RENTED   |
+| 19        | 6         | 11      | 2026-10-22 | RENTED   |
+| 18        | 10        | 4       | 2026-10-20 | RENTED   |
+| 17        | 5         | 9       | 2026-10-16 | RENTED   |
+| 16        | 1         | 5       | 2026-10-12 | RENTED   |
+| 15        | 4         | 8       | 2026-10-08 | RETURNED |
+| 14        | 9         | 1       | 2026-10-05 | RENTED   |
+| 13        | 2         | 3       | 2026-10-01 | RETURNED |
++-----------+-----------+---------+------------+----------+
+(8 rows)
+
+
+================================================================================
+
+-- [Q06] (INNER JOIN) 현재 대여 중인 책 목록
+-- 설명: rental-member-book 3개 테이블을 INNER JOIN 해 '누가 어떤 책을 언제까지 빌렸는지' 확인한다.
+SELECT r.rental_id,
+       m.name   AS member_name,
+       b.title  AS book_title,
+       r.rented_at,
+       r.due_date,
+       r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.returned_at IS NULL
+ORDER BY r.due_date;
+
+----- 실행 결과 -----
+
+sqlite> SELECT r.rental_id,
+       m.name   AS member_name,
+       b.title  AS book_title,
+       r.rented_at,
+       r.due_date,
+       r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.returned_at IS NULL
+ORDER BY r.due_date;
++-----------+-------------+---------------+------------+------------+--------+
+| rental_id | member_name | book_title    | rented_at  | due_date   | status |
++-----------+-------------+---------------+------------+------------+--------+
+| 12        | 윤예준      | 돈의 속성     | 2026-09-28 | 2026-10-12 | RENTED |
+| 14        | 장서윤      | 채식주의자    | 2026-10-05 | 2026-10-19 | RENTED |
+| 16        | 김민준      | 사피엔스      | 2026-10-12 | 2026-10-26 | RENTED |
+| 17        | 정하은      | 클린 코드     | 2026-10-16 | 2026-10-30 | RENTED |
+| 18        | 임주원      | 불편한 편의점 | 2026-10-20 | 2026-11-03 | RENTED |
+| 19        | 강시우      | SQL 첫걸음    | 2026-10-22 | 2026-11-05 | RENTED |
+| 20        | 이서연      | 코스모스      | 2026-10-25 | 2026-11-08 | RENTED |
++-----------+-------------+---------------+------------+------------+--------+
+(7 rows)
+
+
+================================================================================
+
+-- [Q07] (INNER JOIN) 도서 목록과 카테고리명
+-- 설명: book-category를 INNER JOIN 해 category_id 숫자 대신 카테고리 이름으로 도서 목록을 확인한다.
+SELECT b.book_id, b.title, c.name AS category_name, b.price
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+ORDER BY c.category_id, b.book_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.book_id, b.title, c.name AS category_name, b.price
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+ORDER BY c.category_id, b.book_id;
++---------+---------------------+---------------+-------+
+| book_id | title               | category_name | price |
++---------+---------------------+---------------+-------+
+| 1       | 채식주의자          | 소설          | 15000 |
+| 2       | 소년이 온다         | 소설          | 15000 |
+| 3       | 아몬드              | 소설          | 14000 |
+| 4       | 불편한 편의점       | 소설          | 14000 |
+| 14      | 언어의 온도         | 시/에세이     | 13800 |
+| 5       | 사피엔스            | 인문          | 22000 |
+| 6       | 총 균 쇠            | 역사          | 28000 |
+| 7       | 코스모스            | 과학          | 19000 |
+| 8       | 이기적 유전자       | 과학          | 20000 |
+| 9       | 클린 코드           | IT/컴퓨터     | 33000 |
+| 10      | 이것이 자바다       | IT/컴퓨터     | 36000 |
+| 11      | SQL 첫걸음          | IT/컴퓨터     | 18000 |
+| 12      | 돈의 속성           | 경제/경영     | 17800 |
+| 13      | 아주 작은 습관의 힘 | 자기계발      | 16000 |
+| 15      | 서양미술사          | 예술          | 45000 |
++---------+---------------------+---------------+-------+
+(15 rows)
+
+
+================================================================================
+
+-- [Q08] (INNER JOIN 4개 테이블) 리뷰 상세 — 작성자·도서·카테고리
+-- 설명: review-member-book-category를 연결해 평점 4점 이상 리뷰를 작성자·도서·카테고리와 함께 확인한다.
+SELECT rv.review_id,
+       m.name     AS reviewer,
+       b.title    AS book_title,
+       c.name     AS category_name,
+       rv.rating,
+       rv.created_at
+FROM review rv
+INNER JOIN member   m ON rv.member_id  = m.member_id
+INNER JOIN book     b ON rv.book_id    = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE rv.rating >= 4
+ORDER BY rv.rating DESC, rv.created_at DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT rv.review_id,
+       m.name     AS reviewer,
+       b.title    AS book_title,
+       c.name     AS category_name,
+       rv.rating,
+       rv.created_at
+FROM review rv
+INNER JOIN member   m ON rv.member_id  = m.member_id
+INNER JOIN book     b ON rv.book_id    = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE rv.rating >= 4
+ORDER BY rv.rating DESC, rv.created_at DESC;
++-----------+----------+---------------------+---------------+--------+------------+
+| review_id | reviewer | book_title          | category_name | rating | created_at |
++-----------+----------+---------------------+---------------+--------+------------+
+| 12        | 이서연   | 아몬드              | 소설          | 5      | 2026-10-15 |
+| 15        | 조수아   | 채식주의자          | 소설          | 5      | 2026-10-10 |
+| 5         | 최지우   | 불편한 편의점       | 소설          | 5      | 2026-09-21 |
+| 7         | 이서연   | 소년이 온다         | 소설          | 5      | 2026-09-20 |
+| 3         | 박도윤   | 사피엔스            | 인문          | 5      | 2026-08-25 |
+| 1         | 김민준   | 클린 코드           | IT/컴퓨터     | 5      | 2026-08-16 |
+| 14        | 임주원   | 불편한 편의점       | 소설          | 4      | 2026-10-27 |
+| 11        | 박도윤   | 총 균 쇠            | 역사          | 4      | 2026-10-09 |
+| 9         | 조수아   | 아주 작은 습관의 힘 | 자기계발      | 4      | 2026-09-28 |
+| 6         | 정하은   | 코스모스            | 과학          | 4      | 2026-09-15 |
+| 4         | 김민준   | SQL 첫걸음          | IT/컴퓨터     | 4      | 2026-09-03 |
+| 2         | 이서연   | 채식주의자          | 소설          | 4      | 2026-08-26 |
++-----------+----------+---------------------+---------------+--------+------------+
+(12 rows)
+
+
+================================================================================
+
+-- [Q09] (LEFT JOIN) 한 번도 대여되지 않은 도서 포함 전체 도서의 대여 이력
+-- 설명: book을 기준으로 LEFT JOIN 해, 대여 기록이 없는 도서도 rental 쪽이 NULL로 나오는 것을 확인한다.
+SELECT b.book_id,
+       b.title,
+       r.rental_id,
+       r.rented_at
+FROM book b
+LEFT JOIN rental r ON b.book_id = r.book_id
+ORDER BY b.book_id, r.rented_at;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.book_id,
+       b.title,
+       r.rental_id,
+       r.rented_at
+FROM book b
+LEFT JOIN rental r ON b.book_id = r.book_id
+ORDER BY b.book_id, r.rented_at;
++---------+---------------------+-----------+------------+
+| book_id | title               | rental_id | rented_at  |
++---------+---------------------+-----------+------------+
+| 1       | 채식주의자          | 2         | 2026-08-05 |
+| 1       | 채식주의자          | 14        | 2026-10-05 |
+| 2       | 소년이 온다         | 7         | 2026-09-06 |
+| 3       | 아몬드              | 13        | 2026-10-01 |
+| 4       | 불편한 편의점       | 5         | 2026-08-28 |
+| 4       | 불편한 편의점       | 18        | 2026-10-20 |
+| 5       | 사피엔스            | 3         | 2026-08-12 |
+| 5       | 사피엔스            | 16        | 2026-10-12 |
+| 6       | 총 균 쇠            | 11        | 2026-09-25 |
+| 7       | 코스모스            | 6         | 2026-09-02 |
+| 7       | 코스모스            | 20        | 2026-10-25 |
+| 8       | 이기적 유전자       | 15        | 2026-10-08 |
+| 9       | 클린 코드           | 1         | 2026-08-03 |
+| 9       | 클린 코드           | 8         | 2026-09-10 |
+| 9       | 클린 코드           | 17        | 2026-10-16 |
+| 10      | 이것이 자바다       | 10        | 2026-09-21 |
+| 11      | SQL 첫걸음          | 4         | 2026-08-20 |
+| 11      | SQL 첫걸음          | 19        | 2026-10-22 |
+| 12      | 돈의 속성           | 12        | 2026-09-28 |
+| 13      | 아주 작은 습관의 힘 | 9         | 2026-09-15 |
+| 14      | 언어의 온도         | NULL      | NULL       |
+| 15      | 서양미술사          | NULL      | NULL       |
++---------+---------------------+-----------+------------+
+(22 rows)
+
+
+================================================================================
+
+-- [Q10] 회원별 대여 횟수 (대여 0회 회원 포함)
+-- 설명: LEFT JOIN + COUNT + GROUP BY로 회원마다 몇 번 빌렸는지, 많이 빌린 순으로 확인한다.
+SELECT m.member_id,
+       m.name,
+       COUNT(r.rental_id) AS rental_count       -- COUNT(컬럼)은 NULL을 세지 않으므로 대여 없으면 0
+FROM member m
+LEFT JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name
+ORDER BY rental_count DESC, m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id,
+       m.name,
+       COUNT(r.rental_id) AS rental_count       -- COUNT(컬럼)은 NULL을 세지 않으므로 대여 없으면 0
+FROM member m
+LEFT JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name
+ORDER BY rental_count DESC, m.member_id;
++-----------+--------+--------------+
+| member_id | name   | rental_count |
++-----------+--------+--------------+
+| 1         | 김민준 | 4            |
+| 2         | 이서연 | 4            |
+| 3         | 박도윤 | 2            |
+| 4         | 최지우 | 2            |
+| 5         | 정하은 | 2            |
+| 6         | 강시우 | 2            |
+| 7         | 조수아 | 1            |
+| 8         | 윤예준 | 1            |
+| 9         | 장서윤 | 1            |
+| 10        | 임주원 | 1            |
+| 11        | 한지안 | 0            |
+| 12        | 오유나 | 0            |
++-----------+--------+--------------+
+(12 rows)
+
+
+================================================================================
+
+-- [Q11] 카테고리별 보유 현황 (도서 수 · 총 보유 권수 · 평균 가격)
+-- 설명: COUNT, SUM, AVG + GROUP BY로 카테고리마다 도서 종류 수, 총 보유 권수, 평균 정가를 확인한다.
+SELECT c.name                       AS category_name,
+       COUNT(b.book_id)             AS book_count,
+       COALESCE(SUM(b.total_copies), 0) AS total_copies,
+       ROUND(AVG(b.price), 0)       AS avg_price
+FROM category c
+LEFT JOIN book b ON c.category_id = b.category_id
+GROUP BY c.category_id, c.name
+ORDER BY book_count DESC, c.category_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT c.name                       AS category_name,
+       COUNT(b.book_id)             AS book_count,
+       COALESCE(SUM(b.total_copies), 0) AS total_copies,
+       ROUND(AVG(b.price), 0)       AS avg_price
+FROM category c
+LEFT JOIN book b ON c.category_id = b.category_id
+GROUP BY c.category_id, c.name
+ORDER BY book_count DESC, c.category_id;
++---------------+------------+--------------+-----------+
+| category_name | book_count | total_copies | avg_price |
++---------------+------------+--------------+-----------+
+| 소설          | 4          | 10           | 14500.0   |
+| IT/컴퓨터     | 3          | 7            | 29000.0   |
+| 과학          | 2          | 3            | 19500.0   |
+| 시/에세이     | 1          | 1            | 13800.0   |
+| 인문          | 1          | 2            | 22000.0   |
+| 역사          | 1          | 1            | 28000.0   |
+| 경제/경영     | 1          | 2            | 17800.0   |
+| 자기계발      | 1          | 2            | 16000.0   |
+| 예술          | 1          | 1            | 45000.0   |
+| 어린이        | 0          | 0            | NULL      |
++---------------+------------+--------------+-----------+
+(10 rows)
+
+
+================================================================================
+
+-- [Q12] 평균 평점 랭킹 (리뷰 2개 이상인 도서)
+-- 설명: AVG + GROUP BY + HAVING으로 리뷰가 2개 이상 쌓인 도서만 평균 평점 순위를 확인한다.
+SELECT b.title,
+       COUNT(rv.review_id)     AS review_count,
+       ROUND(AVG(rv.rating), 2) AS avg_rating
+FROM review rv
+INNER JOIN book b ON rv.book_id = b.book_id
+GROUP BY b.book_id, b.title
+HAVING COUNT(rv.review_id) >= 2
+ORDER BY avg_rating DESC, review_count DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.title,
+       COUNT(rv.review_id)     AS review_count,
+       ROUND(AVG(rv.rating), 2) AS avg_rating
+FROM review rv
+INNER JOIN book b ON rv.book_id = b.book_id
+GROUP BY b.book_id, b.title
+HAVING COUNT(rv.review_id) >= 2
+ORDER BY avg_rating DESC, review_count DESC;
++---------------+--------------+------------+
+| title         | review_count | avg_rating |
++---------------+--------------+------------+
+| 불편한 편의점 | 2            | 4.5        |
+| 채식주의자    | 2            | 4.5        |
+| 클린 코드     | 2            | 4.0        |
++---------------+--------------+------------+
+(3 rows)
+
+
+================================================================================
+
+-- [Q13] 월별 대여 건수 추이
+-- 설명: 대여일의 'YYYY-MM' 부분으로 GROUP BY 해 월별 대여 건수와 대여된 책 정가 합계를 확인한다.
+--       ※ SUBSTR는 SQLite/MySQL/PostgreSQL 공통. (SQLite 전용으로는 strftime('%Y-%m', rented_at)도 가능)
+SELECT SUBSTR(r.rented_at, 1, 7) AS rental_month,
+       COUNT(*)                  AS rental_count,
+       SUM(b.price)              AS total_book_price
+FROM rental r
+INNER JOIN book b ON r.book_id = b.book_id
+GROUP BY SUBSTR(r.rented_at, 1, 7)
+ORDER BY rental_month;
+
+----- 실행 결과 -----
+
+sqlite> SELECT SUBSTR(r.rented_at, 1, 7) AS rental_month,
+       COUNT(*)                  AS rental_count,
+       SUM(b.price)              AS total_book_price
+FROM rental r
+INNER JOIN book b ON r.book_id = b.book_id
+GROUP BY SUBSTR(r.rented_at, 1, 7)
+ORDER BY rental_month;
++--------------+--------------+------------------+
+| rental_month | rental_count | total_book_price |
++--------------+--------------+------------------+
+| 2026-08      | 5            | 102000           |
+| 2026-09      | 7            | 164800           |
+| 2026-10      | 8            | 155000           |
++--------------+--------------+------------------+
+(3 rows)
+
+
+================================================================================
+
+-- [Q14] 대여 기록이 없는 회원 찾기
+-- 설명: NOT IN 서브쿼리로 rental 테이블에 한 번도 등장하지 않은 회원을 확인한다.
+SELECT member_id, name, email, joined_at
+FROM member
+WHERE member_id NOT IN (SELECT member_id FROM rental)
+ORDER BY member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT member_id, name, email, joined_at
+FROM member
+WHERE member_id NOT IN (SELECT member_id FROM rental)
+ORDER BY member_id;
++-----------+--------+----------------------+------------+
+| member_id | name   | email                | joined_at  |
++-----------+--------+----------------------+------------+
+| 11        | 한지안 | jian.han@example.com | 2026-09-07 |
+| 12        | 오유나 | yuna.oh@example.com  | 2026-10-20 |
++-----------+--------+----------------------+------------+
+(2 rows)
+
+
+================================================================================
+
+-- [Q15] 평균 정가보다 비싼 도서
+-- 설명: 스칼라 서브쿼리로 전체 평균 정가를 구하고, 그보다 비싼 도서만 확인한다.
+SELECT title,
+       price,
+       (SELECT ROUND(AVG(price), 0) FROM book) AS overall_avg_price
+FROM book
+WHERE price > (SELECT AVG(price) FROM book)
+ORDER BY price DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT title,
+       price,
+       (SELECT ROUND(AVG(price), 0) FROM book) AS overall_avg_price
+FROM book
+WHERE price > (SELECT AVG(price) FROM book)
+ORDER BY price DESC;
++---------------+-------+-------------------+
+| title         | price | overall_avg_price |
++---------------+-------+-------------------+
+| 서양미술사    | 45000 | 21773.0           |
+| 이것이 자바다 | 36000 | 21773.0           |
+| 클린 코드     | 33000 | 21773.0           |
+| 총 균 쇠      | 28000 | 21773.0           |
+| 사피엔스      | 22000 | 21773.0           |
++---------------+-------+-------------------+
+(5 rows)
+
+
+================================================================================
+
+-- [Q16] (UPDATE) 연체 상태로 업데이트
+-- 설명: 반납 예정일이 기준일(2026-10-29)보다 지났는데 아직 반납하지 않은 대여 건을 OVERDUE로 바꾼다.
+SELECT rental_id, member_id, due_date, status FROM rental WHERE status <> 'RETURNED' ORDER BY rental_id;  -- 변경 전
+
+UPDATE rental
+SET status = 'OVERDUE'
+WHERE status = 'RENTED'
+  AND returned_at IS NULL
+  AND due_date < '2026-10-29';
+
+SELECT rental_id, member_id, due_date, status FROM rental WHERE status <> 'RETURNED' ORDER BY rental_id;  -- 변경 후
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, due_date, status FROM rental WHERE status <> 'RETURNED' ORDER BY rental_id;  -- 변경 전
++-----------+-----------+------------+--------+
+| rental_id | member_id | due_date   | status |
++-----------+-----------+------------+--------+
+| 12        | 8         | 2026-10-12 | RENTED |
+| 14        | 9         | 2026-10-19 | RENTED |
+| 16        | 1         | 2026-10-26 | RENTED |
+| 17        | 5         | 2026-10-30 | RENTED |
+| 18        | 10        | 2026-11-03 | RENTED |
+| 19        | 6         | 2026-11-05 | RENTED |
+| 20        | 2         | 2026-11-08 | RENTED |
++-----------+-----------+------------+--------+
+(7 rows)
+
+sqlite> UPDATE rental
+SET status = 'OVERDUE'
+WHERE status = 'RENTED'
+  AND returned_at IS NULL
+  AND due_date < '2026-10-29';
+OK — 3 row(s) affected
+
+sqlite> SELECT rental_id, member_id, due_date, status FROM rental WHERE status <> 'RETURNED' ORDER BY rental_id;  -- 변경 후
++-----------+-----------+------------+---------+
+| rental_id | member_id | due_date   | status  |
++-----------+-----------+------------+---------+
+| 12        | 8         | 2026-10-12 | OVERDUE |
+| 14        | 9         | 2026-10-19 | OVERDUE |
+| 16        | 1         | 2026-10-26 | OVERDUE |
+| 17        | 5         | 2026-10-30 | RENTED  |
+| 18        | 10        | 2026-11-03 | RENTED  |
+| 19        | 6         | 2026-11-05 | RENTED  |
+| 20        | 2         | 2026-11-08 | RENTED  |
++-----------+-----------+------------+---------+
+(7 rows)
+
+
+================================================================================
+
+-- [Q17] (UPDATE) 반납 처리
+-- 설명: 17번 대여 건이 오늘 반납되었을 때 반납일과 상태를 함께 갱신한다.
+SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 전
+
+UPDATE rental
+SET returned_at = '2026-10-29',
+    status      = 'RETURNED'
+WHERE rental_id = 17;
+
+SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 후
+
+----- 실행 결과 -----
+
+sqlite> SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 전
++-----------+-----------+---------+------------+-------------+--------+
+| rental_id | member_id | book_id | due_date   | returned_at | status |
++-----------+-----------+---------+------------+-------------+--------+
+| 17        | 5         | 9       | 2026-10-30 | NULL        | RENTED |
++-----------+-----------+---------+------------+-------------+--------+
+(1 rows)
+
+sqlite> UPDATE rental
+SET returned_at = '2026-10-29',
+    status      = 'RETURNED'
+WHERE rental_id = 17;
+OK — 1 row(s) affected
+
+sqlite> SELECT rental_id, member_id, book_id, due_date, returned_at, status FROM rental WHERE rental_id = 17;  -- 변경 후
++-----------+-----------+---------+------------+-------------+----------+
+| rental_id | member_id | book_id | due_date   | returned_at | status   |
++-----------+-----------+---------+------------+-------------+----------+
+| 17        | 5         | 9       | 2026-10-30 | 2026-10-29  | RETURNED |
++-----------+-----------+---------+------------+-------------+----------+
+(1 rows)
+
+
+================================================================================
+
+-- [Q18] (DELETE) 리뷰 삭제
+-- 설명: 작성자 요청에 따라 13번 리뷰를 삭제하고, 리뷰 건수가 15 → 14로 줄었는지 확인한다.
+SELECT COUNT(*) AS review_count_before FROM review;
+
+DELETE FROM review
+WHERE review_id = 13;
+
+SELECT COUNT(*) AS review_count_after FROM review;
+
+----- 실행 결과 -----
+
+sqlite> SELECT COUNT(*) AS review_count_before FROM review;
++---------------------+
+| review_count_before |
++---------------------+
+| 15                  |
++---------------------+
+(1 rows)
+
+sqlite> DELETE FROM review
+WHERE review_id = 13;
+OK — 1 row(s) affected
+
+sqlite> SELECT COUNT(*) AS review_count_after FROM review;
++--------------------+
+| review_count_after |
++--------------------+
+| 14                 |
++--------------------+
+(1 rows)
+
+
+================================================================================
+
+-- [Q19] (CREATE INDEX) 대여 테이블 FK 컬럼에 인덱스 추가
+-- 설명: 회원별 대여 조회 성능을 위해 rental.member_id 에 인덱스를 만들고 실제로 쓰이는지 확인한다.
+-- 적용 이유: rental.member_id는 JOIN과 '회원별 대여 내역' WHERE 조건에 가장 자주 쓰이는데,
+--           SQLite는 FK 컬럼에 인덱스를 자동으로 만들지 않아 전체 스캔이 일어나기 때문이다.
+CREATE INDEX idx_rental_member_id ON rental (member_id);
+
+-- 적용 이유: 연체 점검(Q16)처럼 status와 due_date를 함께 조건으로 거는 조회가 반복되기 때문이다.
+CREATE INDEX idx_rental_status_due ON rental (status, due_date);
+
+-- [SQLite 전용] EXPLAIN QUERY PLAN : 쿼리가 인덱스를 사용하는지 확인 (MySQL/PostgreSQL은 EXPLAIN)
+EXPLAIN QUERY PLAN
+SELECT * FROM rental WHERE member_id = 1;
+
+----- 실행 결과 -----
+
+sqlite> CREATE INDEX idx_rental_member_id ON rental (member_id);
+OK
+
+sqlite> CREATE INDEX idx_rental_status_due ON rental (status, due_date);
+OK
+
+sqlite> EXPLAIN QUERY PLAN
+SELECT * FROM rental WHERE member_id = 1;
++----+--------+---------+--------------------------------------------------------------+
+| id | parent | notused | detail                                                       |
++----+--------+---------+--------------------------------------------------------------+
+| 3  | 0      | 61      | SEARCH rental USING INDEX idx_rental_member_id (member_id=?) |
++----+--------+---------+--------------------------------------------------------------+
+(1 rows)
+
+
+================================================================================
+
+-- [B1-1] JOIN 방식
+-- 설명: rental-book-category-member를 연결한 뒤 같은 회원이 여러 번 나오지 않도록 DISTINCT 처리한다.
+SELECT DISTINCT m.member_id, m.name
+FROM member m
+INNER JOIN rental   r ON m.member_id   = r.member_id
+INNER JOIN book     b ON r.book_id     = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE c.name = 'IT/컴퓨터'
+ORDER BY m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT DISTINCT m.member_id, m.name
+FROM member m
+INNER JOIN rental   r ON m.member_id   = r.member_id
+INNER JOIN book     b ON r.book_id     = b.book_id
+INNER JOIN category c ON b.category_id = c.category_id
+WHERE c.name = 'IT/컴퓨터'
+ORDER BY m.member_id;
++-----------+--------+
+| member_id | name   |
++-----------+--------+
+| 1         | 김민준 |
+| 5         | 정하은 |
+| 6         | 강시우 |
++-----------+--------+
+(3 rows)
+
+
+================================================================================
+
+-- [B1-2] 서브쿼리 방식
+-- 설명: 안쪽에서 'IT/컴퓨터 도서를 빌린 member_id 목록'을 먼저 만들고, 바깥에서 그 목록에 속한 회원만 고른다.
+SELECT m.member_id, m.name
+FROM member m
+WHERE m.member_id IN (
+    SELECT r.member_id
+    FROM rental r
+    WHERE r.book_id IN (
+        SELECT b.book_id
+        FROM book b
+        WHERE b.category_id = (SELECT category_id FROM category WHERE name = 'IT/컴퓨터')
+    )
+)
+ORDER BY m.member_id;
+
+-- 비교 정리
+--  - 결과 : 두 쿼리 결과는 같다 (김민준, 강시우, 정하은).
+--  - JOIN : 여러 테이블의 컬럼(도서명, 대여일 등)을 결과에 함께 보여줄 수 있다.
+--           대신 1:N 관계 때문에 같은 회원이 여러 행으로 늘어나므로 DISTINCT가 필요하다.
+--  - 서브쿼리 : "조건 판단"에만 다른 테이블을 쓰므로 중복이 생기지 않고, 읽는 순서가 요구사항 문장과 비슷하다.
+--           대신 안쪽 테이블의 컬럼을 결과에 꺼낼 수 없다.
+--  - 성능 : 최신 옵티마이저는 IN 서브쿼리를 조인으로 바꿔 실행하는 경우가 많아 소규모 데이터에선 차이가 거의 없다.
+--           결과에 여러 테이블 정보가 필요하면 JOIN, "존재 여부"만 필요하면 서브쿼리(IN/EXISTS)가 자연스럽다.
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id, m.name
+FROM member m
+WHERE m.member_id IN (
+    SELECT r.member_id
+    FROM rental r
+    WHERE r.book_id IN (
+        SELECT b.book_id
+        FROM book b
+        WHERE b.category_id = (SELECT category_id FROM category WHERE name = 'IT/컴퓨터')
+    )
+)
+ORDER BY m.member_id;
++-----------+--------+
+| member_id | name   |
++-----------+--------+
+| 1         | 김민준 |
+| 5         | 정하은 |
+| 6         | 강시우 |
++-----------+--------+
+(3 rows)
+
+
+================================================================================
+
+-- [B2-1] 존재하지 않는 회원으로 대여 기록 입력 (실패 예상)
+-- 설명: member 테이블에 없는 member_id = 999 로 rental을 INSERT 하면 FK 위반으로 막히는지 확인한다.
+INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 999, 3, '2026-10-29', '2026-11-12', 'RENTED');
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 999, 3, '2026-10-29', '2026-11-12', 'RENTED');
+ERROR: FOREIGN KEY constraint failed
+
+
+================================================================================
+
+-- [B2-2] 존재하지 않는 카테고리로 도서 입력 (실패 예상)
+-- 설명: category 테이블에 없는 category_id = 50 으로 book을 INSERT 하면 막히는지 확인한다.
+INSERT INTO book (book_id, category_id, title, author, publisher, isbn, published_year, price, total_copies)
+VALUES (16, 50, '데이터베이스 개론', '홍길동', '예시출판', '978-89-0000-0016', 2024, 30000, 1);
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO book (book_id, category_id, title, author, publisher, isbn, published_year, price, total_copies)
+VALUES (16, 50, '데이터베이스 개론', '홍길동', '예시출판', '978-89-0000-0016', 2024, 30000, 1);
+ERROR: FOREIGN KEY constraint failed
+
+
+================================================================================
+
+-- [B2-3] 대여 기록이 있는 회원 삭제 (실패 예상)
+-- 설명: 자식(rental, review)이 참조 중인 부모(member 1번)를 지우면 '고아 데이터'가 생기므로 막히는지 확인한다.
+DELETE FROM member WHERE member_id = 1;
+
+----- 실행 결과 -----
+
+sqlite> DELETE FROM member WHERE member_id = 1;
+ERROR: FOREIGN KEY constraint failed
+
+
+================================================================================
+
+-- [B2-4] 해결 방법 : 부모 데이터를 먼저 만들고, 올바른 키로 자식 데이터를 입력
+-- 설명: 회원(13번)을 먼저 INSERT 한 뒤 그 회원 번호로 rental을 INSERT 하면 성공하는지 확인한다.
+INSERT INTO member (member_id, name, email, phone, joined_at, status)
+VALUES (13, '서준호', 'junho.seo@example.com', '010-1234-0013', '2026-10-29', 'ACTIVE');
+
+INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 13, 3, '2026-10-29', '2026-11-12', 'RENTED');
+
+SELECT r.rental_id, m.name, b.title, r.rented_at, r.due_date, r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.rental_id = 21;
+
+-- 정리
+--  - 왜 막히나 : FK는 "자식 테이블의 값은 반드시 부모 테이블의 PK에 존재해야 한다"는 규칙이다.
+--               없는 회원(999)·없는 카테고리(50)를 가리키면 누구의 대여인지, 어떤 분류인지 알 수 없는 데이터가 되므로 DB가 거부한다.
+--               반대로 자식이 참조 중인 부모를 지우면 남은 대여 기록이 존재하지 않는 회원을 가리키게 되므로 삭제도 거부한다.
+--  - 어떻게 고치나 : (1) 부모 행을 먼저 INSERT 하고 자식을 INSERT 한다 (입력 순서 = category/member → book → rental/review)
+--                   (2) 오타라면 실제 존재하는 키 값으로 고친다.
+--                   (3) 회원 삭제가 꼭 필요하면 자식 데이터를 먼저 정리하거나, 실무에선 status='WITHDRAWN' 처럼 상태값으로 비활성화한다.
+--  - SQLite 주의 : PRAGMA foreign_keys = ON 을 빠뜨리면 위 입력이 모두 '성공'해 버린다. FK가 실제로 동작하게 하려면 반드시 켠다.
+
+----- 실행 결과 -----
+
+sqlite> INSERT INTO member (member_id, name, email, phone, joined_at, status)
+VALUES (13, '서준호', 'junho.seo@example.com', '010-1234-0013', '2026-10-29', 'ACTIVE');
+OK — 1 row(s) affected
+
+sqlite> INSERT INTO rental (rental_id, member_id, book_id, rented_at, due_date, status)
+VALUES (21, 13, 3, '2026-10-29', '2026-11-12', 'RENTED');
+OK — 1 row(s) affected
+
+sqlite> SELECT r.rental_id, m.name, b.title, r.rented_at, r.due_date, r.status
+FROM rental r
+INNER JOIN member m ON r.member_id = m.member_id
+INNER JOIN book   b ON r.book_id   = b.book_id
+WHERE r.rental_id = 21;
++-----------+--------+--------+------------+------------+--------+
+| rental_id | name   | title  | rented_at  | due_date   | status |
++-----------+--------+--------+------------+------------+--------+
+| 21        | 서준호 | 아몬드 | 2026-10-29 | 2026-11-12 | RENTED |
++-----------+--------+--------+------------+------------+--------+
+(1 rows)
+
+
+================================================================================
+
+-- [B3-1] 지표 1. 월별 대여 건수 및 연체 발생 추이
+-- 설명: 월별로 대여 건수, 그중 연체된 건수(늦게 반납 + 기한 지난 미반납), 연체율(%)을 확인한다.
+SELECT SUBSTR(rented_at, 1, 7) AS rental_month,
+       COUNT(*) AS rental_count,
+       SUM(CASE WHEN returned_at > due_date
+                  OR (returned_at IS NULL AND due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN returned_at > due_date
+                                OR (returned_at IS NULL AND due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(*), 1) AS overdue_rate_pct
+FROM rental
+GROUP BY SUBSTR(rented_at, 1, 7)
+ORDER BY rental_month;
+
+----- 실행 결과 -----
+
+sqlite> SELECT SUBSTR(rented_at, 1, 7) AS rental_month,
+       COUNT(*) AS rental_count,
+       SUM(CASE WHEN returned_at > due_date
+                  OR (returned_at IS NULL AND due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN returned_at > due_date
+                                OR (returned_at IS NULL AND due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(*), 1) AS overdue_rate_pct
+FROM rental
+GROUP BY SUBSTR(rented_at, 1, 7)
+ORDER BY rental_month;
++--------------+--------------+---------------+------------------+
+| rental_month | rental_count | overdue_count | overdue_rate_pct |
++--------------+--------------+---------------+------------------+
+| 2026-08      | 5            | 2             | 40.0             |
+| 2026-09      | 7            | 2             | 28.6             |
+| 2026-10      | 9            | 2             | 22.2             |
++--------------+--------------+---------------+------------------+
+(3 rows)
+
+
+================================================================================
+
+-- [B3-2] 지표 2. 인기 도서 TOP 10 (대여 횟수 기준, 동률이면 평균 평점 순)
+-- 설명: 대여 횟수와 평균 평점을 함께 집계해 가장 많이 빌려간 도서 10권을 확인한다.
+SELECT b.title,
+       c.name AS category_name,
+       COUNT(r.rental_id) AS rental_count,
+       (SELECT ROUND(AVG(rv.rating), 2) FROM review rv WHERE rv.book_id = b.book_id) AS avg_rating
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+LEFT JOIN rental r    ON b.book_id = r.book_id
+GROUP BY b.book_id, b.title, c.name
+ORDER BY rental_count DESC, avg_rating DESC, b.book_id
+LIMIT 10;
+
+----- 실행 결과 -----
+
+sqlite> SELECT b.title,
+       c.name AS category_name,
+       COUNT(r.rental_id) AS rental_count,
+       (SELECT ROUND(AVG(rv.rating), 2) FROM review rv WHERE rv.book_id = b.book_id) AS avg_rating
+FROM book b
+INNER JOIN category c ON b.category_id = c.category_id
+LEFT JOIN rental r    ON b.book_id = r.book_id
+GROUP BY b.book_id, b.title, c.name
+ORDER BY rental_count DESC, avg_rating DESC, b.book_id
+LIMIT 10;
++---------------------+---------------+--------------+------------+
+| title               | category_name | rental_count | avg_rating |
++---------------------+---------------+--------------+------------+
+| 클린 코드           | IT/컴퓨터     | 3            | 4.0        |
+| 아몬드              | 소설          | 2            | 5.0        |
+| 사피엔스            | 인문          | 2            | 5.0        |
+| 채식주의자          | 소설          | 2            | 4.5        |
+| 불편한 편의점       | 소설          | 2            | 4.5        |
+| 코스모스            | 과학          | 2            | 4.0        |
+| SQL 첫걸음          | IT/컴퓨터     | 2            | 4.0        |
+| 소년이 온다         | 소설          | 1            | 5.0        |
+| 총 균 쇠            | 역사          | 1            | 4.0        |
+| 아주 작은 습관의 힘 | 자기계발      | 1            | 4.0        |
++---------------------+---------------+--------------+------------+
+(10 rows)
+
+
+================================================================================
+
+-- [B3-3] 지표 3. 연체율이 높은 회원 목록
+-- 설명: 회원별 전체 대여 중 연체된 비율을 계산해, 연체 이력이 있는 회원을 연체율 높은 순으로 확인한다.
+SELECT m.member_id,
+       m.name,
+       m.status AS member_status,
+       COUNT(r.rental_id) AS rental_count,
+       SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN r.returned_at > r.due_date
+                                OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(r.rental_id), 1) AS overdue_rate_pct
+FROM member m
+INNER JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name, m.status
+HAVING SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) > 0     -- 표준 SQL은 HAVING에서 별칭을 못 쓰므로 식을 다시 적는다
+ORDER BY overdue_rate_pct DESC, overdue_count DESC, m.member_id;
+
+----- 실행 결과 -----
+
+sqlite> SELECT m.member_id,
+       m.name,
+       m.status AS member_status,
+       COUNT(r.rental_id) AS rental_count,
+       SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) AS overdue_count,
+       ROUND(100.0 * SUM(CASE WHEN r.returned_at > r.due_date
+                                OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                              THEN 1 ELSE 0 END) / COUNT(r.rental_id), 1) AS overdue_rate_pct
+FROM member m
+INNER JOIN rental r ON m.member_id = r.member_id
+GROUP BY m.member_id, m.name, m.status
+HAVING SUM(CASE WHEN r.returned_at > r.due_date
+                  OR (r.returned_at IS NULL AND r.due_date < '2026-10-29')
+                THEN 1 ELSE 0 END) > 0     -- 표준 SQL은 HAVING에서 별칭을 못 쓰므로 식을 다시 적는다
+ORDER BY overdue_rate_pct DESC, overdue_count DESC, m.member_id;
++-----------+--------+---------------+--------------+---------------+------------------+
+| member_id | name   | member_status | rental_count | overdue_count | overdue_rate_pct |
++-----------+--------+---------------+--------------+---------------+------------------+
+| 8         | 윤예준 | SUSPENDED     | 1            | 1             | 100.0            |
+| 9         | 장서윤 | ACTIVE        | 1            | 1             | 100.0            |
+| 4         | 최지우 | ACTIVE        | 2            | 1             | 50.0             |
+| 6         | 강시우 | ACTIVE        | 2            | 1             | 50.0             |
+| 1         | 김민준 | ACTIVE        | 4            | 1             | 25.0             |
+| 2         | 이서연 | ACTIVE        | 4            | 1             | 25.0             |
++-----------+--------+---------------+--------------+---------------+------------------+
+(6 rows)

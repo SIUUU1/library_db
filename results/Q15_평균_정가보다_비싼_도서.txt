@@ -1,0 +1,27 @@
+-- [Q15] 평균 정가보다 비싼 도서
+-- 설명: 스칼라 서브쿼리로 전체 평균 정가를 구하고, 그보다 비싼 도서만 확인한다.
+SELECT title,
+       price,
+       (SELECT ROUND(AVG(price), 0) FROM book) AS overall_avg_price
+FROM book
+WHERE price > (SELECT AVG(price) FROM book)
+ORDER BY price DESC;
+
+----- 실행 결과 -----
+
+sqlite> SELECT title,
+       price,
+       (SELECT ROUND(AVG(price), 0) FROM book) AS overall_avg_price
+FROM book
+WHERE price > (SELECT AVG(price) FROM book)
+ORDER BY price DESC;
++---------------+-------+-------------------+
+| title         | price | overall_avg_price |
++---------------+-------+-------------------+
+| 서양미술사    | 45000 | 21773.0           |
+| 이것이 자바다 | 36000 | 21773.0           |
+| 클린 코드     | 33000 | 21773.0           |
+| 총 균 쇠      | 28000 | 21773.0           |
+| 사피엔스      | 22000 | 21773.0           |
++---------------+-------+-------------------+
+(5 rows)
